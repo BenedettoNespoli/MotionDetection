@@ -4,7 +4,7 @@ GSCapture cam;
 int numPixels;
 int max, min, c;
 int[] backgroundPixels;
-int threshold = 1500;
+float threshold = 0.5;
 int t_c = 0;
 int detected = 0;
 
@@ -32,6 +32,8 @@ int fCONTINUOUS = 0;
  * 1 = true
  */
 int fCOLOR = 0;
+
+boolean fDETECTED = false;
 // ----
 
 void getResolutionsAndFps() {
@@ -46,15 +48,18 @@ void getResolutionsAndFps() {
 }
 
 boolean detectMovement() {
-  if(c<=threshold) {
+  if(c<=(width*height)/100*threshold) {
     t_c = 0;
+    fDETECTED = false;
     return false;
   }
   else {
     if (t_c >= 3) {
+      fDETECTED = true;
       return true;
     } else {
       t_c++;
+      fDETECTED = false;
       return false;
     }
   }
@@ -81,13 +86,14 @@ void setup() {
 void drawFlags() {
   rectMode(CORNERS);
   fill(0, 150);
-  rect(0, height-80, 90, height);
+  rect(0, height-105, 95, height);
   fill(255);
   String str = "Saving rate: " + (fSAVE!=0 ? 1.0/fSAVE : 0)
+  + "\nMotion: " + (fDETECTED ? "yes" : "no")
   + "\nDeubg: " + (fDEBUG==1 ? "yes" : "no")
   + "\nColor: " + (fCOLOR==1 ? "yes" : "no")
   + "\nContinuous: " + (fCONTINUOUS==1 ? "yes" : "no");
-  text(str, 0, height-80, 90, height);
+  text(str, 5, height-100, 95, height);
 }
 
 void draw() {
