@@ -4,9 +4,12 @@ GSCapture cam;
 int numPixels;
 int max, min, c;
 int[] backgroundPixels;
-float threshold = 0.5;
 int t_c = 0;
 int detected = 0;
+
+int w = 640;
+int h = 480;
+float threshold = 0.5;
 
 // FLAGS
 
@@ -70,8 +73,8 @@ int MAX(int n, int m) {return n>m ? n : m;}
 int MIN(int n, int m) {return n<m ? n : m;}
 
 void setup() {
-  size(640, 480);
-  cam = new GSCapture(this, 640, 480, "/dev/video0");
+  size(w, h);
+  cam = new GSCapture(this, w, h, "/dev/video0");
   cam.start();
   numPixels = cam.width * cam.height;
   backgroundPixels = new int[numPixels];
@@ -84,16 +87,16 @@ void setup() {
 }
 
 void drawFlags() {
+  String str = "Motion: " + (fDETECTED ? "yes" : "no")
+  + "\ns) Saving rate: " + (fSAVE!=0 ? 1.0/fSAVE : 0)
+  + "\nd) Deubg: " + (fDEBUG==1 ? "yes" : "no")
+  + "\nc) Color: " + (fCOLOR==1 ? "yes" : "no")
+  + "\nk) Continuous: " + (fCONTINUOUS==1 ? "yes" : "no");
   rectMode(CORNERS);
   fill(0, 150);
-  rect(0, height-105, 95, height);
+  rect(0, height-(20*str.split("\n").length)-5, 110, height);
   fill(255);
-  String str = "Saving rate: " + (fSAVE!=0 ? 1.0/fSAVE : 0)
-  + "\nMotion: " + (fDETECTED ? "yes" : "no")
-  + "\nDeubg: " + (fDEBUG==1 ? "yes" : "no")
-  + "\nColor: " + (fCOLOR==1 ? "yes" : "no")
-  + "\nContinuous: " + (fCONTINUOUS==1 ? "yes" : "no");
-  text(str, 5, height-100, 95, height);
+  text(str, 5, height-(20*str.split("\n").length), 110, height);
 }
 
 void draw() {
