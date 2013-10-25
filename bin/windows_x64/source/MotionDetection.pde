@@ -4,7 +4,7 @@ GSCapture cam;
 int numPixels;
 int[] backgroundPixels;
 int detected = 0;
-ArrayList<int[]> toSee;
+ArrayList<Section> toSee;
 int sumDiff;
 
 int w = 640;
@@ -45,19 +45,19 @@ int area(int[] a) {
 }
 
 boolean detectMovement(int rx) {
-  int[] r = toSee.get(rx);
-  if(r[4]<=area(r)/100.0*threshold) {
-    r[6]=0;
-    r[5]=0;
+  Section s = toSee.get(rx);
+  if(s.pixelsChanged <= s.area()/100.0*threshold) {
+    s.threeStepVar=0;
+    s.setMotion(false);
     return false;
   }
   else {
-    if (r[6] >= 3) {
-      r[5]=1;
+    if (s.threeStepVar >= 3) {
+      s.setMotion(true);
       return true;
     } else {
-      r[6]++;
-      r[5]=0;
+      s.threeStepVar++;
+      s.setMotion(false);
       return false;
     }
   }
@@ -76,7 +76,7 @@ void setup() {
   
   textFont(createFont("Arial",12,true));
   
-  toSee = new ArrayList<int[]>();
+  toSee = new ArrayList<Section>();
 }
 
 void drawRectProp(int rx) {
@@ -84,11 +84,11 @@ void drawRectProp(int rx) {
   noStroke();
   rectMode(CORNERS);
 
-  int[] r = toSee.get(rx);
-  String str = "Area: " + area(r)
-  +"\nMotion: " + (r[5]==1 ? "yes" : "no")
-  +"\n" + r[4] + "p "
-  +"\n" + r[4]*100.0/area(r) + "%"
+  Section s = toSee.get(rx);
+  String str = "Area: " + s.area()
+  +"\nMotion: " + (s.isMotion() ? "yes" : "no")
+  +"\n" + s.pixelsChanged + "p "
+  +"\n" + s.pixelsChanged*100.0/s.area() + "%"
   ;  
   fill(0, 150);
   rect(100*rx+0, 0, 100*rx+100, 100);
@@ -121,7 +121,7 @@ void draw() {
     cam.read();
     cam.loadPixels();
     loadPixels();
-    
+
     if(fCALIBRATING) {
       background(cam);
       updatePixels();
@@ -130,11 +130,11 @@ void draw() {
     int currentRect;
     int presenceSum = 0;
     for(currentRect=0; currentRect<toSee.size(); currentRect++) {
-      int[] cr = toSee.get(currentRect);
-      cr[4]=0;
+      Section s = toSee.get(currentRect);
+      s.pixelsChanged = 0;
       sumDiff = 0;
-      for(int tempy=cr[1]; tempy<cr[3]; tempy++) {
-        for(int tempx=cr[0]; tempx<cr[2]; tempx++) {
+      for(int tempy=s.y1(); tempy<s.y2(); tempy++) {
+        for(int tempx=s.x1(); tempx<s.x2(); tempx++) {
           int i = tempx+tempy*width;
           if(i<0 || i>=cam.pixels.length) {continue;}
           
@@ -157,7 +157,7 @@ void draw() {
           //sumDiff += diff;
           if (diff>50) {
             pixels[i] = color(255,255,255);
-            cr[4]++;
+            s.pixelsChanged++;
           }
           else {
             if(fCOLOR == 0) {
@@ -206,7 +206,7 @@ void keyPressed() {
     fCALIBRATING = !fCALIBRATING;
     break;
   case 'l':
-    toSee = new ArrayList<int[]>();
+    toSee = new ArrayList<Section>();
     background(150);
     draw();
   }
@@ -230,29 +230,7 @@ void mouseDragged() {
 }
 
 void mouseReleased() {
-  // point x, y
-  // point x end, y end
-  // how many pixels are detected as "moved"
-  // 1 = rectangle is in movement
-  // 3step counter to detect movement
-  
   if(!fCALIBRATING) {return;}
-  if(x<mouseX) {
-    if(y<mouseY) {
-      int[] tmp = {x,y,mouseX,mouseY,0,0,0};
-      toSee.add(tmp);
-    } else {
-      int[] tmp = {x,mouseY,mouseX,y,0,0,0};
-      toSee.add(tmp);
-    }
-  } else {
-      if(y<mouseY) {
-      int[] tmp = {mouseX,y,x,mouseY,0,0,0};
-      toSee.add(tmp);
-    } else {
-      int[] tmp = {mouseX,mouseY,x,y,0,0,0};
-      toSee.add(tmp);
-    }
-  }
+  toSee.add(new Section(x,mouseX,y,mouseY));
   if(fDEBUG==1) {println("Saved rect "+x+";"+y+" -> "+mouseX+";"+mouseY);}
 }

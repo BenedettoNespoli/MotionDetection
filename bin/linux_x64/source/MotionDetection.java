@@ -22,7 +22,7 @@ GSCapture cam;
 int numPixels;
 int[] backgroundPixels;
 int detected = 0;
-ArrayList<int[]> toSee;
+ArrayList<Section> toSee;
 int sumDiff;
 
 int w = 640;
@@ -63,19 +63,19 @@ public int area(int[] a) {
 }
 
 public boolean detectMovement(int rx) {
-  int[] r = toSee.get(rx);
-  if(r[4]<=area(r)/100.0f*threshold) {
-    r[6]=0;
-    r[5]=0;
+  Section s = toSee.get(rx);
+  if(s.pixelsChanged <= s.area()/100.0f*threshold) {
+    s.threeStepVar=0;
+    s.setMotion(false);
     return false;
   }
   else {
-    if (r[6] >= 3) {
-      r[5]=1;
+    if (s.threeStepVar >= 3) {
+      s.setMotion(true);
       return true;
     } else {
-      r[6]++;
-      r[5]=0;
+      s.threeStepVar++;
+      s.setMotion(false);
       return false;
     }
   }
@@ -94,7 +94,7 @@ public void setup() {
   
   textFont(createFont("Arial",12,true));
   
-  toSee = new ArrayList<int[]>();
+  toSee = new ArrayList<Section>();
 }
 
 public void drawRectProp(int rx) {
@@ -102,11 +102,11 @@ public void drawRectProp(int rx) {
   noStroke();
   rectMode(CORNERS);
 
-  int[] r = toSee.get(rx);
-  String str = "Area: " + area(r)
-  +"\nMotion: " + (r[5]==1 ? "yes" : "no")
-  +"\n" + r[4] + "p "
-  +"\n" + r[4]*100.0f/area(r) + "%"
+  Section s = toSee.get(rx);
+  String str = "Area: " + s.area()
+  +"\nMotion: " + (s.isMotion() ? "yes" : "no")
+  +"\n" + s.pixelsChanged + "p "
+  +"\n" + s.pixelsChanged*100.0f/s.area() + "%"
   ;  
   fill(0, 150);
   rect(100*rx+0, 0, 100*rx+100, 100);
@@ -139,7 +139,7 @@ public void draw() {
     cam.read();
     cam.loadPixels();
     loadPixels();
-    
+
     if(fCALIBRATING) {
       background(cam);
       updatePixels();
@@ -148,11 +148,11 @@ public void draw() {
     int currentRect;
     int presenceSum = 0;
     for(currentRect=0; currentRect<toSee.size(); currentRect++) {
-      int[] cr = toSee.get(currentRect);
-      cr[4]=0;
+      Section s = toSee.get(currentRect);
+      s.pixelsChanged = 0;
       sumDiff = 0;
-      for(int tempy=cr[1]; tempy<cr[3]; tempy++) {
-        for(int tempx=cr[0]; tempx<cr[2]; tempx++) {
+      for(int tempy=s.y1(); tempy<s.y2(); tempy++) {
+        for(int tempx=s.x1(); tempx<s.x2(); tempx++) {
           int i = tempx+tempy*width;
           if(i<0 || i>=cam.pixels.length) {continue;}
           
@@ -175,7 +175,7 @@ public void draw() {
           //sumDiff += diff;
           if (diff>50) {
             pixels[i] = color(255,255,255);
-            cr[4]++;
+            s.pixelsChanged++;
           }
           else {
             if(fCOLOR == 0) {
@@ -224,7 +224,7 @@ public void keyPressed() {
     fCALIBRATING = !fCALIBRATING;
     break;
   case 'l':
-    toSee = new ArrayList<int[]>();
+    toSee = new ArrayList<Section>();
     background(150);
     draw();
   }
@@ -248,31 +248,45 @@ public void mouseDragged() {
 }
 
 public void mouseReleased() {
-  // point x, y
-  // point x end, y end
-  // how many pixels are detected as "moved"
-  // 1 = rectangle is in movement
-  // 3step counter to detect movement
-  
   if(!fCALIBRATING) {return;}
-  if(x<mouseX) {
-    if(y<mouseY) {
-      int[] tmp = {x,y,mouseX,mouseY,0,0,0};
-      toSee.add(tmp);
-    } else {
-      int[] tmp = {x,mouseY,mouseX,y,0,0,0};
-      toSee.add(tmp);
-    }
-  } else {
-      if(y<mouseY) {
-      int[] tmp = {mouseX,y,x,mouseY,0,0,0};
-      toSee.add(tmp);
-    } else {
-      int[] tmp = {mouseX,mouseY,x,y,0,0,0};
-      toSee.add(tmp);
-    }
-  }
+  toSee.add(new Section(x,mouseX,y,mouseY));
   if(fDEBUG==1) {println("Saved rect "+x+";"+y+" -> "+mouseX+";"+mouseY);}
+}
+// This class rapresents the section of the
+// webcam described by the rectangle
+
+public class Section {
+  private int x1,x2,y1,y2,area;
+  private boolean motion;
+  public int pixelsChanged,threeStepVar;
+  
+  public Section(int x1,int x2,int y1,int y2) {
+    if(x1<x2) {
+      this.x1=x1;
+      this.x2=x2;
+    } else {
+      this.x2=x1;
+      this.x1=x2;
+    }
+    if(y1<y2) {
+      this.y1=y1;
+      this.y2=y2;
+    } else {
+      this.y2=y1;
+      this.y1=y2;
+    }
+   this.area = (x2-x1) * (y2-y1);
+  }
+  
+  public int x1() {return x1;}
+  public int x2() {return x2;}
+  public int y1() {return y1;}
+  public int y2() {return y2;}
+  
+  public boolean isMotion() {return motion;}
+  public void setMotion(boolean b) {motion=b;}
+  
+  public int area() {return area;}
 }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "MotionDetection" };
