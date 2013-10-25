@@ -47,7 +47,7 @@ int area(int[] a) {
 
 boolean detectMovement(int rx) {
   int[] r = toSee.get(rx);
-  if(r[4]<=area(r)/100*threshold) {
+  if(r[4]<=area(r)/100.0*threshold) {
     t_c = 0;
     r[5]=0;
     return false;
@@ -122,6 +122,12 @@ void draw() {
     cam.read();
     cam.loadPixels();
     loadPixels();
+    
+    if(fCALIBRATING) {
+      background(cam);
+      updatePixels();
+    }
+    
     int currentRect;
     int presenceSum = 0;
     for(currentRect=0; currentRect<toSee.size(); currentRect++) {
@@ -201,6 +207,10 @@ void keyPressed() {
   case 'w':
     fCALIBRATING = !fCALIBRATING;
     break;
+  case 'l':
+    toSee = new ArrayList<int[]>();
+    background(150);
+    draw();
   }
 }
 
