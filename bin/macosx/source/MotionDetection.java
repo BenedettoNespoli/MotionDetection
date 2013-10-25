@@ -21,7 +21,6 @@ public class MotionDetection extends PApplet {
 GSCapture cam;
 int numPixels;
 int[] backgroundPixels;
-int t_c = 0;
 int detected = 0;
 ArrayList<int[]> toSee;
 int sumDiff;
@@ -65,17 +64,17 @@ public int area(int[] a) {
 
 public boolean detectMovement(int rx) {
   int[] r = toSee.get(rx);
-  if(r[4]<=area(r)/100*threshold) {
-    t_c = 0;
+  if(r[4]<=area(r)/100.0f*threshold) {
+    r[6]=0;
     r[5]=0;
     return false;
   }
   else {
-    if (t_c >= 3) {
+    if (r[6] >= 3) {
       r[5]=1;
       return true;
     } else {
-      t_c++;
+      r[6]++;
       r[5]=0;
       return false;
     }
@@ -140,6 +139,12 @@ public void draw() {
     cam.read();
     cam.loadPixels();
     loadPixels();
+    
+    if(fCALIBRATING) {
+      background(cam);
+      updatePixels();
+    }
+    
     int currentRect;
     int presenceSum = 0;
     for(currentRect=0; currentRect<toSee.size(); currentRect++) {
@@ -191,7 +196,6 @@ public void draw() {
       updatePixels();
     }
 
-    updatePixels();
     if(fCONTINUOUS==1) {
       arraycopy(cam.pixels, backgroundPixels);
     }
@@ -219,6 +223,10 @@ public void keyPressed() {
   case 'w':
     fCALIBRATING = !fCALIBRATING;
     break;
+  case 'l':
+    toSee = new ArrayList<int[]>();
+    background(150);
+    draw();
   }
 }
 
@@ -240,21 +248,27 @@ public void mouseDragged() {
 }
 
 public void mouseReleased() {
+  // point x, y
+  // point x end, y end
+  // how many pixels are detected as "moved"
+  // 1 = rectangle is in movement
+  // 3step counter to detect movement
+  
   if(!fCALIBRATING) {return;}
   if(x<mouseX) {
     if(y<mouseY) {
-      int[] tmp = {x,y,mouseX,mouseY,0,0};
+      int[] tmp = {x,y,mouseX,mouseY,0,0,0};
       toSee.add(tmp);
     } else {
-      int[] tmp = {x,mouseY,mouseX,y,0,0};
+      int[] tmp = {x,mouseY,mouseX,y,0,0,0};
       toSee.add(tmp);
     }
   } else {
       if(y<mouseY) {
-      int[] tmp = {mouseX,y,x,mouseY,0,0};
+      int[] tmp = {mouseX,y,x,mouseY,0,0,0};
       toSee.add(tmp);
     } else {
-      int[] tmp = {mouseX,mouseY,x,y,0,0};
+      int[] tmp = {mouseX,mouseY,x,y,0,0,0};
       toSee.add(tmp);
     }
   }
