@@ -55,12 +55,8 @@ int fCONTINUOUS = 1;
  */
 int fCOLOR = 1;
 
-boolean fCALIBRATING = false;
+boolean fCALIBRATING = true;
 // ----
-
-public int area(int[] a) {
-  return abs(a[0]-a[2])*abs(a[1]-a[3]);
-}
 
 public boolean detectMovement(int rx) {
   Section s = toSee.get(rx);
@@ -68,9 +64,12 @@ public boolean detectMovement(int rx) {
     s.threeStepVar=0;
     s.setMotion(false);
     return false;
-  }
-  else {
+  } else {
     if (s.threeStepVar >= 3) {
+      if(s.threeStepVar==3) {
+        s.movements++;
+      }
+      s.threeStepVar++;
       s.setMotion(true);
       return true;
     } else {
@@ -105,6 +104,7 @@ public void drawRectProp(int rx) {
   Section s = toSee.get(rx);
   String str = "Area: " + s.area()
   +"\nMotion: " + (s.isMotion() ? "yes" : "no")
+  +"\nMovements: " + s.movements
   +"\n" + s.pixelsChanged + "p "
   +"\n" + s.pixelsChanged*100.0f/s.area() + "%"
   ;  
@@ -240,7 +240,7 @@ public void mousePressed() {
 public void mouseDragged() {
   if(!fCALIBRATING) {return;}
   updatePixels();
-  background(150);
+  background(128);
   fill(255,0,0,150);
   stroke(255,0,0);
   rectMode(CORNERS);
@@ -258,7 +258,7 @@ public void mouseReleased() {
 public class Section {
   private int x1,x2,y1,y2,area;
   private boolean motion;
-  public int pixelsChanged,threeStepVar;
+  public int pixelsChanged,threeStepVar,movements;
   
   public Section(int x1,int x2,int y1,int y2) {
     if(x1<x2) {

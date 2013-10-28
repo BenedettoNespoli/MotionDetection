@@ -4,7 +4,7 @@
 public class Section {
   private int x1,x2,y1,y2,area;
   private boolean motion;
-  public int pixelsChanged,threeStepVar;
+  public int pixelsChanged,threeStepVar,movements;
   
   public Section(int x1,int x2,int y1,int y2) {
     if(x1<x2) {

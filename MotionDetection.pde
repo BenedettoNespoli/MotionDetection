@@ -37,12 +37,8 @@ int fCONTINUOUS = 1;
  */
 int fCOLOR = 1;
 
-boolean fCALIBRATING = false;
+boolean fCALIBRATING = true;
 // ----
-
-int area(int[] a) {
-  return abs(a[0]-a[2])*abs(a[1]-a[3]);
-}
 
 boolean detectMovement(int rx) {
   Section s = toSee.get(rx);
@@ -50,9 +46,12 @@ boolean detectMovement(int rx) {
     s.threeStepVar=0;
     s.setMotion(false);
     return false;
-  }
-  else {
+  } else {
     if (s.threeStepVar >= 3) {
+      if(s.threeStepVar==3) {
+        s.movements++;
+      }
+      s.threeStepVar++;
       s.setMotion(true);
       return true;
     } else {
@@ -87,6 +86,7 @@ void drawRectProp(int rx) {
   Section s = toSee.get(rx);
   String str = "Area: " + s.area()
   +"\nMotion: " + (s.isMotion() ? "yes" : "no")
+  +"\nMovements: " + s.movements
   +"\n" + s.pixelsChanged + "p "
   +"\n" + s.pixelsChanged*100.0/s.area() + "%"
   ;  
@@ -222,7 +222,7 @@ void mousePressed() {
 void mouseDragged() {
   if(!fCALIBRATING) {return;}
   updatePixels();
-  background(150);
+  background(128);
   fill(255,0,0,150);
   stroke(255,0,0);
   rectMode(CORNERS);
