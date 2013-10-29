@@ -37,7 +37,7 @@ int fCONTINUOUS = 1;
  */
 int fCOLOR = 1;
 
-boolean fCALIBRATING = true;
+boolean fCALIBRATING = false;
 // ----
 
 boolean detectMovement(int rx) {
@@ -121,11 +121,6 @@ void draw() {
     cam.read();
     cam.loadPixels();
     loadPixels();
-
-    if(fCALIBRATING) {
-      background(cam);
-      updatePixels();
-    }
     
     int currentRect;
     int presenceSum = 0;
@@ -177,7 +172,7 @@ void draw() {
       }
       updatePixels();
     }
-
+    
     if(fCONTINUOUS==1) {
       arraycopy(cam.pixels, backgroundPixels);
     }
@@ -204,11 +199,13 @@ void keyPressed() {
     break;
   case 'w':
     fCALIBRATING = !fCALIBRATING;
+    if(fCALIBRATING) {background(cam);}
+    if(!fCALIBRATING) {background(128);}
     break;
   case 'l':
     toSee = new ArrayList<Section>();
-    background(150);
     draw();
+    break;
   }
 }
 
@@ -222,7 +219,7 @@ void mousePressed() {
 void mouseDragged() {
   if(!fCALIBRATING) {return;}
   updatePixels();
-  background(128);
+  background(cam);
   fill(255,0,0,150);
   stroke(255,0,0);
   rectMode(CORNERS);
@@ -231,6 +228,8 @@ void mouseDragged() {
 
 void mouseReleased() {
   if(!fCALIBRATING) {return;}
-  toSee.add(new Section(x,mouseX,y,mouseY));
+  Section s_ = new Section(x,mouseX,y,mouseY);
+  if(s_.area()==0) {return;}
+  toSee.add(s_);
   if(fDEBUG==1) {println("Saved rect "+x+";"+y+" -> "+mouseX+";"+mouseY);}
 }
