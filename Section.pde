@@ -33,4 +33,13 @@ public class Section {
   public void setMotion(boolean b) {motion=b;}
   
   public int area() {return area;}
+  
+  public void onFirstMove(int i) {
+    String pr = "/usr/bin/zenity --info --text=\""+i+"\"";
+    try {
+      Runtime.getRuntime().exec(pr);
+    } catch (IOException ex) {
+      ex.printStackTrace();
+    }
+  }
 }

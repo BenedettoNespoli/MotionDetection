@@ -27,18 +27,11 @@ int fSAVE = 0;
  */
 int fDEBUG = 0;
 
-/* 0 = false
- * 1 = true
- */
 int fCONTINUOUS = 1;
 
-/* 0 = false
- * 1 = true
- */
 int fCOLOR = 1;
 
 boolean fCALIBRATING = false;
-// ----
 
 boolean detectMovement(int rx) {
   Section s = toSee.get(rx);
@@ -49,6 +42,7 @@ boolean detectMovement(int rx) {
   } else {
     if (s.threeStepVar >= 3) {
       if(s.threeStepVar==3) {
+        s.onFirstMove(rx);
         s.movements++;
       }
       s.threeStepVar++;
@@ -121,7 +115,7 @@ void draw() {
     cam.read();
     cam.loadPixels();
     loadPixels();
-    
+
     int currentRect;
     int presenceSum = 0;
     for(currentRect=0; currentRect<toSee.size(); currentRect++) {
@@ -170,9 +164,9 @@ void draw() {
         }
         detected++;
       }
-      updatePixels();
     }
     
+    updatePixels();
     if(fCONTINUOUS==1) {
       arraycopy(cam.pixels, backgroundPixels);
     }
@@ -182,7 +176,7 @@ void draw() {
 
 void keyPressed() {
   switch(key) {
-  case 's':
+  case 'S':
     fSAVE = fSAVE==10 ? 0 : 10;
     break;
   case 'd':
@@ -201,6 +195,9 @@ void keyPressed() {
     fCALIBRATING = !fCALIBRATING;
     if(fCALIBRATING) {background(cam);}
     if(!fCALIBRATING) {background(128);}
+    break;
+  case 's':
+    if(fCALIBRATING) {background(cam);}
     break;
   case 'l':
     toSee = new ArrayList<Section>();
